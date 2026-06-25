@@ -63,8 +63,16 @@ def main():
         print("--no-email: hopper over epostutsending.")
         return
 
-    emailer.send_report(config, html, context["date_str"])
-    print(f"Epost sendt til: {', '.join(config['recipients'])}")
+    # Epostfeil skal ikke hindre at nettsiden publiseres. Vi logger antall
+    # mottakere (ikke adressene – loggen er offentlig i et public repo).
+    try:
+        emailer.send_report(config, html, context["date_str"])
+        print(f"Epost sendt til {len(config['recipients'])} mottaker(e).")
+    except Exception as e:
+        # Maskér eventuelle epostadresser i feilmeldingen (offentlig logg).
+        import re
+        msg = re.sub(r"[\w.+-]+@[\w.-]+", "[epost]", str(e))
+        print(f"  ! Epostutsending feilet (nettsiden publiseres likevel): {msg}")
 
 
 if __name__ == "__main__":
