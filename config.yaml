@@ -1,0 +1,73 @@
+# ───────────────────────────────────────────────────────────────
+#  Morgenrapport – konfigurasjon
+#  Rediger denne fila for å endre mottakere, avsender og innhold.
+# ───────────────────────────────────────────────────────────────
+
+# Hvem som skal motta rapporten på epost.
+# I skyen (GitHub Actions) settes mottakerne via hemmeligheten RECIPIENTS
+# (komma-skilt liste) – slik holdes private adresser ute av det offentlige repoet.
+# For lokal testing kan du midlertidig liste adresser her, f.eks.:
+#   recipients:
+#     - din@epost.no
+recipients: []
+
+# Avsenderadresse. Domenet (etter @) MÅ være verifisert i Resend.
+# For første test uten eget domene, bruk: "Morgenrapport <onboarding@resend.dev>"
+# (den kan kun sende til din egen Resend-konto-epost).
+email_from: "Morgenrapport <onboarding@resend.dev>"
+
+# Emnefelt. {date} byttes ut med datoen.
+email_subject: "Morgenrapport {date}"
+
+# URL til den publiserte rapporten (GitHub Pages).
+# Fyll inn ETTER at du har aktivert Pages, f.eks.:
+#   https://ditt-brukernavn.github.io/morgenrapport
+site_url: ""
+
+# Rapporten sendes kun når klokken er denne timen i Europe/Oslo.
+# (GitHub Actions kjører i UTC; vi planlegger to tidspunkt og lar denne
+#  vakten velge riktig for vinter-/sommertid.) Sett til null for å sende
+#  ved hver kjøring.
+send_hour_oslo: 8
+
+# ── Aksjeindekser (yfinance-tickere) ──────────────────────────
+indices:
+  - { name: "S&P 500",       ticker: "^GSPC",     region: "USA" }
+  - { name: "Nasdaq",        ticker: "^IXIC",     region: "USA" }
+  - { name: "Dow Jones",     ticker: "^DJI",      region: "USA" }
+  - { name: "OSEBX",         ticker: "OSEBX.OL",  region: "Norge" }
+  - { name: "OMXS30",        ticker: "^OMXS30",   region: "Sverige" }
+  - { name: "DAX",           ticker: "^GDAXI",    region: "Tyskland" }
+  - { name: "FTSE 100",      ticker: "^FTSE",     region: "Storbritannia" }
+  - { name: "Euro Stoxx 50", ticker: "^STOXX50E", region: "Europa" }
+  - { name: "Nikkei 225",    ticker: "^N225",     region: "Japan" }
+  - { name: "Hang Seng",     ticker: "^HSI",      region: "Hong Kong" }
+
+# ── 10-årige statsobligasjoner (rekkefølge i rapporten) ───────
+#  Hentes fra offisielle kilder per land (se src/fetch_data.py).
+bonds:
+  - { code: "US", name: "USA 10 år" }
+  - { code: "NO", name: "Norge 10 år" }
+  - { code: "SE", name: "Sverige 10 år" }
+  - { code: "DE", name: "Tyskland 10 år" }
+  - { code: "GB", name: "Storbritannia 10 år" }
+# Merk: UK er ikke i Eurostat makrodata (etter Brexit). Statsobligasjon UK vises via BoE.
+
+# ── Brent blend (råolje) ──────────────────────────────────────
+brent_ticker: "BZ=F"
+
+# ── Strømpris (Nord Pool dag-frem, EUR/MWh) ───────────────────
+power_areas:
+  - { area: "NO1" }
+  - { area: "NO2" }
+  - { area: "NO3" }
+  - { area: "NO4" }
+  - { area: "NO5" }
+  - { area: "SE1" }
+  - { area: "SE2" }
+  - { area: "SE3" }
+  - { area: "SE4" }
+  - { area: "DE-LU" }
+
+# ── BESS-nyheter – antall saker å vise ───────────────────────
+bess_news_max_items: 8

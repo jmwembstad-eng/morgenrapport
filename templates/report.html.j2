@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morgenrapport {{ date_str }}</title>
+</head>
+<body style="margin:0; padding:0; background:#eef0f3; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:#1f2328;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef0f3;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="660" cellpadding="0" cellspacing="0" style="max-width:660px; width:100%; background:#ffffff; border-radius:14px; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.10);">
+
+  <!-- Topptekst -->
+  <tr><td style="background:#0b1f3a; padding:30px 34px;">
+    <div style="color:#ffffff; font-size:23px; font-weight:700; letter-spacing:0.3px;">Morgenrapport</div>
+    <div style="color:#9fb3d1; font-size:14px; margin-top:5px; text-transform:capitalize;">{{ date_str }}</div>
+  </td></tr>
+
+  <tr><td style="padding:14px 34px 0; color:#6b7280; font-size:12px; line-height:1.5;">
+    Sist oppdatert {{ updated_str }} (Oslo). Tallene viser siste tilgjengelige close per marked.
+  </td></tr>
+
+  <!-- ── Aksjeindekser ── -->
+  <tr><td style="padding:22px 34px 0;">
+    <div style="font-size:15px; font-weight:700; color:#0b1f3a; border-bottom:2px solid #0b1f3a; padding-bottom:6px;">Aksjeindekser</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:6px;">
+      <tr style="font-size:11px; color:#6b7280; text-transform:uppercase; letter-spacing:0.4px;">
+        <td style="padding:8px 0; text-align:left;">Indeks</td>
+        <td style="padding:8px 0; text-align:right;">Siste close</td>
+        <td style="padding:8px 0; text-align:right;">Endring</td>
+        <td style="padding:8px 0; text-align:right;">%</td>
+      </tr>
+      {% for r in indices %}
+      <tr style="border-top:1px solid #eef0f3;">
+        <td style="padding:11px 0; text-align:left;">
+          <div style="font-size:14px; font-weight:600; color:#1f2328;">{{ r.name }}</div>
+          <div style="font-size:11px; color:#9aa0a6;">{{ r.region }} · {{ r.date }}</div>
+        </td>
+        <td style="padding:11px 0; text-align:right; font-size:14px; font-variant-numeric:tabular-nums;">{{ r.close }}</td>
+        <td style="padding:11px 0; text-align:right; font-size:14px; color:{{ r.color }};">{{ r.change }}</td>
+        <td style="padding:11px 0; text-align:right; font-size:14px; font-weight:600; color:{{ r.color }}; white-space:nowrap;">{{ r.arrow }} {{ r.change_pct }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </td></tr>
+
+  <!-- ── Statsobligasjoner ── -->
+  <tr><td style="padding:24px 34px 0;">
+    <div style="font-size:15px; font-weight:700; color:#0b1f3a; border-bottom:2px solid #0b1f3a; padding-bottom:6px;">Statsobligasjoner – 10 år</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:6px;">
+      <tr style="font-size:11px; color:#6b7280; text-transform:uppercase; letter-spacing:0.4px;">
+        <td style="padding:8px 0; text-align:left;">Land</td>
+        <td style="padding:8px 0; text-align:right;">Effektiv rente</td>
+        <td style="padding:8px 0; text-align:right;">Endring</td>
+      </tr>
+      {% for r in bonds %}
+      <tr style="border-top:1px solid #eef0f3;">
+        <td style="padding:11px 0; text-align:left;">
+          <div style="font-size:14px; font-weight:600; color:#1f2328;">{{ r.name }}</div>
+          <div style="font-size:11px; color:#9aa0a6;">{{ r.date }}</div>
+        </td>
+        <td style="padding:11px 0; text-align:right; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;">{{ r.yield_pct }}</td>
+        <td style="padding:11px 0; text-align:right; font-size:14px; color:{{ r.color }}; white-space:nowrap;">{{ r.arrow }} {{ r.change_bps }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </td></tr>
+
+  <!-- ── Brent ── -->
+  <tr><td style="padding:24px 34px 0;">
+    <div style="font-size:15px; font-weight:700; color:#0b1f3a; border-bottom:2px solid #0b1f3a; padding-bottom:6px;">Brent blend (råolje)</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:10px; background:#f7f8fa; border-radius:10px;">
+      <tr>
+        <td style="padding:16px 18px; text-align:left;">
+          <div style="font-size:11px; color:#9aa0a6;">USD per fat · {{ brent.date }}</div>
+          <div style="font-size:26px; font-weight:700; color:#1f2328; margin-top:2px;">{{ brent.price }}</div>
+        </td>
+        <td style="padding:16px 18px; text-align:right;">
+          <div style="font-size:15px; color:{{ brent.color }};">{{ brent.change }}</div>
+          <div style="font-size:18px; font-weight:700; color:{{ brent.color }}; white-space:nowrap;">{{ brent.arrow }} {{ brent.change_pct }}</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- ── Strømpris ── -->
+  {% if power_no or power_se or power_de %}
+  <tr><td style="padding:24px 34px 0;">
+    <div style="font-size:15px; font-weight:700; color:#0b1f3a; border-bottom:2px solid #0b1f3a; padding-bottom:6px;">Strømpris dag-frem (EUR/MWh)</div>
+    {% if power_no %}
+    <div style="font-size:11px; font-weight:600; color:#9aa0a6; text-transform:uppercase; letter-spacing:0.5px; margin-top:10px; margin-bottom:2px;">Norge</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      {% for p in power_no %}
+      <tr style="border-top:1px solid #eef0f3;">
+        <td style="padding:8px 0; font-size:14px; color:#1f2328;">{{ p.label }}</td>
+        <td style="padding:8px 0; text-align:right; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;">{{ p.price }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    {% if power_se %}
+    <div style="font-size:11px; font-weight:600; color:#9aa0a6; text-transform:uppercase; letter-spacing:0.5px; margin-top:12px; margin-bottom:2px;">Sverige</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      {% for p in power_se %}
+      <tr style="border-top:1px solid #eef0f3;">
+        <td style="padding:8px 0; font-size:14px; color:#1f2328;">{{ p.label }}</td>
+        <td style="padding:8px 0; text-align:right; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;">{{ p.price }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    {% if power_de %}
+    <div style="font-size:11px; font-weight:600; color:#9aa0a6; text-transform:uppercase; letter-spacing:0.5px; margin-top:12px; margin-bottom:2px;">Tyskland</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      <tr style="border-top:1px solid #eef0f3;">
+        <td style="padding:8px 0; font-size:14px; color:#1f2328;">{{ power_de.label }}</td>
+        <td style="padding:8px 0; text-align:right; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;">{{ power_de.price }}</td>
+      </tr>
+    </table>
+    {% endif %}
+    {% if power_no and power_no[0].date != '–' %}
+    <div style="font-size:11px; color:#9aa0a6; margin-top:6px;">Levering {{ power_no[0].date }}</div>
+    {% endif %}
+  </td></tr>
+  {% endif %}
+
+  <!-- ── Makroøkonomi ── -->
+  {% if macro %}
+  <tr><td style="padding:24px 34px 0;">
+    <div style="font-size:15px; font-weight:700; color:#0b1f3a; border-bottom:2px solid #0b1f3a; padding-bottom:6px;">Makroøkonomi</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:6px;">
+      <tr style="font-size:11px; color:#6b7280; text-transform:uppercase; letter-spacing:0.4px;">
+        <td style="padding:8px 0; text-align:left;">Land</td>
+        <td style="padding:8px 0; text-align:right;">KPI-inflasjon</td>
+        <td style="padding:8px 0; text-align:right;">Arbeidsledighet</td>
+        <td style="padding:8px 0; text-align:right;">BNP-vekst</td>
+      </tr>
+      {% for m in macro %}
+      <tr style="border-top:1px solid #eef0f3;">
+        <td style="padding:10px 0; font-size:14px; font-weight:600; color:#1f2328;">{{ m.name }}</td>
+        <td style="padding:10px 0; text-align:right; font-size:13px; color:#1f2328;">
+          {{ m.cpi }} %
+          {% if m.cpi_period %}<div style="font-size:10px; color:#9aa0a6;">{{ m.cpi_period }}</div>{% endif %}
+        </td>
+        <td style="padding:10px 0; text-align:right; font-size:13px; color:#1f2328;">
+          {{ m.unemployment }} %
+          {% if m.unemployment_period %}<div style="font-size:10px; color:#9aa0a6;">{{ m.unemployment_period }}</div>{% endif %}
+        </td>
+        <td style="padding:10px 0; text-align:right; font-size:13px; color:#1f2328;">
+          {{ m.gdp }} %
+          {% if m.gdp_period %}<div style="font-size:10px; color:#9aa0a6;">{{ m.gdp_period }}</div>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div style="font-size:11px; color:#9aa0a6; margin-top:6px;">Kilde: Eurostat. Siste tilgjengelige periode per indikator.</div>
+  </td></tr>
+  {% endif %}
+
+  <!-- ── BESS-nyheter ── -->
+  {% if bess_news %}
+  <tr><td style="padding:24px 34px 0;">
+    <div style="font-size:15px; font-weight:700; color:#0b1f3a; border-bottom:2px solid #0b1f3a; padding-bottom:6px;">BESS-nyheter – Norden</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:4px;">
+      {% for n in bess_news %}
+      <tr style="border-top:1px solid #eef0f3;">
+        <td style="padding:10px 0;">
+          <a href="{{ n.link }}" style="font-size:14px; font-weight:600; color:#0b1f3a; text-decoration:none;">{{ n.title }}</a>
+          <div style="font-size:11px; color:#9aa0a6; margin-top:2px;">{{ n.source }}{% if n.date %} · {{ n.date }}{% endif %}</div>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div style="font-size:11px; color:#9aa0a6; margin-top:6px;">Kilde: Google News. Søk: BESS / battery energy storage / batterilager (NO, SE, DK, FI).</div>
+  </td></tr>
+  {% endif %}
+
+  <!-- Bunntekst -->
+  <tr><td style="padding:26px 34px 30px;">
+    {% if site_url %}
+    <a href="{{ site_url }}" style="display:inline-block; background:#0b1f3a; color:#ffffff; text-decoration:none; font-size:13px; font-weight:600; padding:11px 20px; border-radius:8px;">Se rapporten på nett</a>
+    {% endif %}
+    <div style="margin-top:18px; font-size:11px; color:#9aa0a6; line-height:1.6;">
+      Automatisk generert morgenrapport. Kilder: aksjeindekser og Brent fra Yahoo Finance;
+      statsrenter fra US Treasury (USA), Norges Bank (Norge), Riksbanken (Sverige),
+      ECB (Tyskland = euro-områdets AAA-kurve, nær proxy for tysk Bund) og Bank of England (UK).
+      Tall hentes «as is» og er kun til informasjon – ikke investeringsråd.
+    </div>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

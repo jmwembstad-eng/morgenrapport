@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+*.log
+.DS_Store
+
+# Lokale verktøy-/scratch-filer (ikke del av prosjektet)
+.claude/
+_rss_test.py
+test_apis.py
