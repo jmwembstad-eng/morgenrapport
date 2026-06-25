@@ -20,9 +20,7 @@ email_from: "Morgenrapport <onboarding@resend.dev>"
 email_subject: "Morgenrapport {date}"
 
 # URL til den publiserte rapporten (GitHub Pages).
-# Fyll inn ETTER at du har aktivert Pages, f.eks.:
-#   https://ditt-brukernavn.github.io/morgenrapport
-site_url: ""
+site_url: "https://jmwembstad-eng.github.io/morgenrapport"
 
 # Rapporten sendes kun når klokken er denne timen i Europe/Oslo.
 # (GitHub Actions kjører i UTC; vi planlegger to tidspunkt og lar denne
