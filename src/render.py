@@ -61,6 +61,22 @@ def build_context(report, config, now=None):
         "arrow": barrow,
     }
 
+    # ── Energibørs (EEX-relaterte tall) ────────────────────────
+    eex = []
+    for r in report.get("eex", []):
+        color, arrow = fmt.direction(r.get("change_pct"))
+        price = r.get("price")
+        eex.append({
+            "name": r["name"],
+            "unit": r.get("unit", ""),
+            "price": fmt.nb_number(price) if price is not None else fmt.DASH,
+            "change": fmt.signed(r.get("change")),
+            "change_pct": fmt.signed(r.get("change_pct"), suffix=" %"),
+            "date": r.get("date") or fmt.DASH,
+            "color": color,
+            "arrow": arrow,
+        })
+
     # ── Strømpris ──────────────────────────────────────────────
     no_areas = ["NO1", "NO2", "NO3", "NO4", "NO5"]
     se_areas = ["SE1", "SE2", "SE3", "SE4"]
@@ -98,8 +114,9 @@ def build_context(report, config, now=None):
             "gdp": gdp_v, "gdp_period": gdp_p,
         })
 
-    # ── BESS-nyheter ───────────────────────────────────────────
+    # ── Nyheter ────────────────────────────────────────────────
     bess_news = report.get("bess_news", [])
+    energy_news = report.get("energy_news", [])
 
     site_url = (config.get("site_url") or "").rstrip("/")
     report_url = f"{site_url}/reports/{now:%Y-%m-%d}.html" if site_url else ""
@@ -110,11 +127,13 @@ def build_context(report, config, now=None):
         "indices": indices,
         "bonds": bonds,
         "brent": brent,
+        "eex": eex,
         "power_no": power_no,
         "power_se": power_se,
         "power_de": power_de,
         "macro": macro,
         "bess_news": bess_news,
+        "energy_news": energy_news,
         "site_url": site_url,
         "report_url": report_url,
     }

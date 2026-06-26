@@ -69,3 +69,10 @@ power_areas:
 
 # ── BESS-nyheter – antall saker å vise ───────────────────────
 bess_news_max_items: 8
+
+# ── Energinyheter (TSO-er, regulatorer, bransjemedier) ────────
+# Kildene (Statnett, Svenska Kraftnät, Fingrid, Energinet, Energidepartementet,
+# RME/NVE, Europower, EnergyWatch, Montel) er definert i src/fetch_data.py
+# (de har ulike feed-typer og særegenheter som krever egen håndtering).
+energy_news_max_items: 14    # totalt antall saker i seksjonen
+energy_news_per_source: 2    # maks antall per kilde (så ingen kilde dominerer)

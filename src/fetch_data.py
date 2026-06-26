@@ -14,7 +14,7 @@ Alle kildene er gratis og krever ingen API-nøkkel.
 import csv
 import io
 import json
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import requests
@@ -33,6 +33,14 @@ def _get_text(url):
     r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
     r.raise_for_status()
     return r.text
+
+
+def _get_bytes(url):
+    """Som _get_text, men returnerer rå bytes – lar ElementTree lese
+    XML-deklarasjon/BOM riktig (viktig for feeds med UTF-8-BOM)."""
+    r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+    r.raise_for_status()
+    return r.content
 
 
 # ─────────────────────── yfinance (indekser + Brent) ──────────
@@ -419,6 +427,132 @@ def _bess_news(max_items=8):
     return items[:max_items]
 
 
+# ─────────────── Energibørs (EEX-relaterte tall via gratis kilder) ───────
+# EEX selv er bak betalingsmur for programmatisk bruk. Disse tickerne er
+# verifisert å spore de samme produktene gratis via yfinance:
+#   CO2.MI  – SparkChange Physical Carbon ETC (~EUA-spot, EUR/tonn)
+#   TTF=F   – nederlandsk TTF-gass (EUR/MWh)
+# Tysk kraft-future finnes ikke gratis; dag-frem-spot vises i strømseksjonen.
+_EEX_PRODUCTS = [
+    {"name": "CO₂ (EUA)",  "ticker": "CO2.MI", "fallback": "CO2.L", "unit": "EUR/tonn"},
+    {"name": "Gass (TTF)", "ticker": "TTF=F",  "fallback": None,    "unit": "EUR/MWh"},
+]
+
+
+def _eex():
+    """Henter energibørs-relaterte priser (CO2 EUA, TTF-gass) via yfinance."""
+    out = []
+    for p in _EEX_PRODUCTS:
+        last = prev = iso = None
+        for tk in (p["ticker"], p.get("fallback")):
+            if not tk:
+                continue
+            try:
+                last, prev, iso = _yf_last_two(tk)
+                break
+            except Exception as e:
+                print(f"  ! EEX {p['name']} ({tk}) feilet: {e}")
+        change = (last - prev) if (last is not None and prev is not None) else None
+        pct = (change / prev * 100) if (change is not None and prev) else None
+        out.append({"name": p["name"], "unit": p["unit"], "price": last,
+                    "change": change, "change_pct": pct, "date": iso})
+    return out
+
+
+# ─────────────── Energinyheter (TSO-er, regulatorer, bransjemedier) ───────
+# Hver kilde er verifisert. Native RSS der det finnes; ellers Google News RSS
+# (betalingsmur-medier uten åpen feed). Statnett legger datoen i Atom-namespacet.
+_ATOM_UPDATED = "{http://www.w3.org/2005/Atom}updated"
+
+_ENERGY_FEEDS = [
+    {"label": "Statnett",            "url": "https://www.statnett.no/rss"},
+    {"label": "Svenska Kraftnät",    "url": "https://www.svk.se/Api/RSSFeed/GetAllNews"},
+    {"label": "Fingrid",             "url": "https://www.fingrid.fi/api/rss/news?language=en"},
+    {"label": "Energidepartementet", "url": "https://www.regjeringen.no/no/rss/Rss/2581966/?owner=750"},
+    {"label": "EnergyWatch",         "url": "https://energywatch.eu/rss/seneste.rss"},
+    {"label": "Energinet",           "url": "https://news.google.com/rss/search?q=%22Energinet%22&hl=da&gl=DK&ceid=DK:da"},
+    {"label": "Europower",           "url": "https://news.google.com/rss/search?q=europower+kraft+OR+energi&hl=no&gl=NO&ceid=NO:no"},
+    {"label": "Montel",              "url": "https://news.google.com/rss/search?q=site:montelnews.com&hl=en-US&gl=US&ceid=US:en"},
+    {"label": "RME/NVE",             "url": "https://news.google.com/rss/search?q=NVE+(kraft+OR+energi+OR+konsesjon+OR+str%C3%B8m)+when:7d&hl=no&gl=NO&ceid=NO:no"},
+]
+
+
+def _feed_datetime(item):
+    """Returnerer publiseringstid for et RSS/Atom-item som tz-aware datetime.
+    Prøver pubDate (RFC822) først, så Atom <updated> (ISO8601). None hvis ingen."""
+    pub = item.findtext("pubDate")
+    if pub:
+        try:
+            return parsedate_to_datetime(pub)
+        except Exception:
+            pass
+    upd = item.findtext(_ATOM_UPDATED)
+    if upd:
+        try:
+            return datetime.fromisoformat(upd.strip().replace("Z", "+00:00"))
+        except Exception:
+            pass
+    return None
+
+
+def _epoch(dt):
+    """Sorterbar nøkkel: epoch-sekunder, eller -1 for ukjent dato."""
+    if dt is None:
+        return -1.0
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.timestamp()
+
+
+def _parse_feed(xml_bytes, label):
+    """Parser én feed til liste av {title, link, source, date, _ts}."""
+    items = []
+    root = ET.fromstring(xml_bytes)
+    for it in root.findall(".//item"):
+        title = (it.findtext("title") or "").strip()
+        # Google News henger «– Kilde» på tittelen – fjern den.
+        if " - " in title:
+            title = title.rsplit(" - ", 1)[0].strip()
+        link = (it.findtext("link") or "").strip()
+        if not title or not link:
+            continue
+        dt = _feed_datetime(it)
+        items.append({"title": title, "link": link, "source": label,
+                      "date": dt.date().isoformat() if dt else "",
+                      "_ts": _epoch(dt)})
+    return items
+
+
+def _energy_news(max_items=12, per_source=2):
+    """Samler ferske energinyheter fra TSO-er, regulatorer og bransjemedier.
+
+    Tar inntil `per_source` nyeste fra hver kilde (så ingen kilde dominerer),
+    slår sammen, dedupliserer på tittel og sorterer nyeste først.
+    """
+    seen, collected = set(), []
+    for feed in _ENERGY_FEEDS:
+        try:
+            items = _parse_feed(_get_bytes(feed["url"]), feed["label"])
+            items.sort(key=lambda x: x["_ts"], reverse=True)  # nyeste først
+            taken = 0
+            for it in items:
+                key = it["title"][:70].lower()
+                if key in seen:
+                    continue
+                seen.add(key)
+                collected.append(it)
+                taken += 1
+                if taken >= per_source:
+                    break
+        except Exception as e:
+            print(f"  ! Energinyheter feilet for {feed['label']}: {e}")
+
+    collected.sort(key=lambda x: x["_ts"], reverse=True)
+    for it in collected:
+        it.pop("_ts", None)
+    return collected[:max_items]
+
+
 # ──────────────────────────── samlet ──────────────────────────
 def fetch_all(config):
     power_areas = [a["area"] for a in config.get("power_areas", [])]
@@ -426,7 +560,10 @@ def fetch_all(config):
         "indices": [_index(i) for i in config["indices"]],
         "bonds": _bonds(config["bonds"]),
         "brent": _brent(config.get("brent_ticker", "BZ=F")),
+        "eex": _eex(),
         "power": _power(power_areas) if power_areas else [],
         "macro": _macro(),
         "bess_news": _bess_news(config.get("bess_news_max_items", 8)),
+        "energy_news": _energy_news(config.get("energy_news_max_items", 12),
+                                    config.get("energy_news_per_source", 2)),
     }

@@ -83,6 +83,31 @@
     </table>
   </td></tr>
 
+  <!-- ── Energibørs ── -->
+  {% if eex %}
+  <tr><td style="padding:24px 34px 0;">
+    <div style="font-size:15px; font-weight:700; color:#0b1f3a; border-bottom:2px solid #0b1f3a; padding-bottom:6px;">Energibørs – CO₂ &amp; gass</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:6px;">
+      <tr style="font-size:11px; color:#6b7280; text-transform:uppercase; letter-spacing:0.4px;">
+        <td style="padding:8px 0; text-align:left;">Produkt</td>
+        <td style="padding:8px 0; text-align:right;">Pris</td>
+        <td style="padding:8px 0; text-align:right;">Endring</td>
+      </tr>
+      {% for r in eex %}
+      <tr style="border-top:1px solid #eef0f3;">
+        <td style="padding:11px 0; text-align:left;">
+          <div style="font-size:14px; font-weight:600; color:#1f2328;">{{ r.name }}</div>
+          <div style="font-size:11px; color:#9aa0a6;">{{ r.unit }} · {{ r.date }}</div>
+        </td>
+        <td style="padding:11px 0; text-align:right; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;">{{ r.price }}</td>
+        <td style="padding:11px 0; text-align:right; font-size:14px; color:{{ r.color }}; white-space:nowrap;">{{ r.arrow }} {{ r.change_pct }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div style="font-size:11px; color:#9aa0a6; margin-top:6px;">EEX-data er bak betalingsmur; viser nær-ekvivalenter (EUA-karbon, TTF-gass) via Yahoo Finance. Tysk kraft-future krever EEX-abonnement – dag-frem-spot vises under Strømpris.</div>
+  </td></tr>
+  {% endif %}
+
   <!-- ── Strømpris ── -->
   {% if power_no or power_se or power_de %}
   <tr><td style="padding:24px 34px 0;">
@@ -154,6 +179,24 @@
       {% endfor %}
     </table>
     <div style="font-size:11px; color:#9aa0a6; margin-top:6px;">Kilde: Eurostat. Siste tilgjengelige periode per indikator.</div>
+  </td></tr>
+  {% endif %}
+
+  <!-- ── Energinyheter ── -->
+  {% if energy_news %}
+  <tr><td style="padding:24px 34px 0;">
+    <div style="font-size:15px; font-weight:700; color:#0b1f3a; border-bottom:2px solid #0b1f3a; padding-bottom:6px;">Energinyheter – Norden &amp; Europa</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:4px;">
+      {% for n in energy_news %}
+      <tr style="border-top:1px solid #eef0f3;">
+        <td style="padding:10px 0;">
+          <a href="{{ n.link }}" style="font-size:14px; font-weight:600; color:#0b1f3a; text-decoration:none;">{{ n.title }}</a>
+          <div style="font-size:11px; color:#9aa0a6; margin-top:2px;">{{ n.source }}{% if n.date %} · {{ n.date }}{% endif %}</div>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div style="font-size:11px; color:#9aa0a6; margin-top:6px;">Kilder: Statnett, Svenska Kraftnät, Fingrid, Energinet, Energidepartementet, RME/NVE, Europower, EnergyWatch, Montel (native RSS der tilgjengelig, ellers Google News).</div>
   </td></tr>
   {% endif %}
 
