@@ -34,6 +34,10 @@ jobs:
 
       - name: Generer og send rapport
         env:
+          # Gmail-vei (når alle mottakere). Brukes hvis begge er satt:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          # Resend-vei (fallback hvis Gmail ikke er konfigurert):
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RECIPIENTS: ${{ secrets.RECIPIENTS }}
           # Manuell kjøring overstyrer tidssone-vakten:
