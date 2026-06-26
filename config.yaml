@@ -61,10 +61,8 @@ power_areas:
   - { area: "NO3" }
   - { area: "NO4" }
   - { area: "NO5" }
-  - { area: "SE1" }
-  - { area: "SE2" }
-  - { area: "SE3" }
-  - { area: "SE4" }
+  # Svenske soner (SE1–SE4) er fjernet etter ønske.
+  # Legg dem evt. tilbake ved å sette inn f.eks.  - { area: "SE3" }
   - { area: "DE-LU" }
 
 # ── BESS-nyheter – antall saker å vise ───────────────────────
